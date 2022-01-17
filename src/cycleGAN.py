@@ -1,4 +1,7 @@
-class CycleGan(keras.Model):
+import tensorflow as tf
+from tensorflow import keras
+
+class CycleGAN(keras.Model):
     def __init__(self, target_style_generator, source_style_generator,
                   target_style_discriminator, source_style_discriminator,
                   lambda_cycle = 10.0, lambda_identity = 0.5):
@@ -13,7 +16,7 @@ class CycleGan(keras.Model):
     def compile(self, target_style_gen_optimizer, src_style_gen_optimizer,
                   target_style_disc_optimizer, src_style_disc_optimizer,
                   generator_loss_function, discriminator_loss_function):
-        super(CycleGan, self).compile()
+        super(CycleGAN, self).compile()
         self.target_style_gen_opt = target_style_gen_optimizer
         self.src_style_gen_opt = src_style_gen_optimizer
         self.target_style_disc_opt = target_style_disc_optimizer
