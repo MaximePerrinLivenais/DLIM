@@ -1,6 +1,8 @@
 import tensorflow as tf
 from tensorflow import keras
 
+from tensorflow.keras.utils import Progbar
+
 class CycleGAN(keras.Model):
     def __init__(self, target_style_generator, source_style_generator,
                   target_style_discriminator, source_style_discriminator,
@@ -101,9 +103,11 @@ class CycleGAN(keras.Model):
                   input_val_data = None, target_val_data = None, nb_batch_per_val = 0,
                   save_weight_filepath = None):
         data = zip(input_data, target_data)
+        metrics_name = ['target generator', 'source generator', 'target discriminator', 'source discriminator']
 
         if input_val_data and target_val_data and nb_batch_per_val > 0:
             validation_data = zip(input_val_data, target_val_data)
+            metrics_name.append('validation loss')
             if save_weight_filepath:
                 best_val_loss = None
         elif input_val_data or target_val_data or nb_batch_per_val > 0 or save_weight_filepath:
@@ -112,6 +116,8 @@ class CycleGAN(keras.Model):
             validation_data = None
 
         for epoch in range(nb_epochs):
+            print('\nepoch {}/{}'.format(epoch + 1, nb_epochs))
+            progress_bar = Progbar(nb_batch_per_epoch, stateful_metrics = metrics_name)
             epoch_metrics = [tf.keras.metrics.Mean() for _ in range(4)]
 
             for batch_index, batch in enumerate(data):
@@ -122,8 +128,8 @@ class CycleGAN(keras.Model):
                 for index, batch_loss in enumerate(batch_losses_list):
                     epoch_metrics[index](batch_loss)
 
-            epoch_average_losses = [metric.result().numpy().mean() for metric in epoch_metrics]
-            print(epoch_average_losses)
+                epoch_average_losses = zip(metrics_name, [metric.result().numpy().mean() for metric in epoch_metrics])
+                progress_bar.update(batch_index, values = epoch_average_losses, finalize = validation_data is None)
 
             if validation_data is None:
                 continue
@@ -133,8 +139,10 @@ class CycleGAN(keras.Model):
                 if batch_index >= nb_batch_per_val:
                     break
                 validation_metric(self.compute_val_loss(batch))
+
             val_loss = validation_metric.result().numpy().mean()
-            print('validation loss:' + str(val_loss))
+            epoch_losses = zip(metrics_name, [metric.result().numpy().mean() for metric in epoch_metrics].append(val_loss))
+            progress_bar.update(nb_batch_per_epoch, values = epoch_losses, finalize = True)
 
             if save_weight_filepath and (best_val_loss is None or val_loss <= best_val_loss):
                 self.save_weights(save_weight_filepath)
