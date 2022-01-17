@@ -5,7 +5,7 @@ class CycleGAN(keras.Model):
     def __init__(self, target_style_generator, source_style_generator,
                   target_style_discriminator, source_style_discriminator,
                   lambda_cycle = 10.0, lambda_identity = 0.5):
-        super(CycleGan, self).__init__()
+        super(CycleGAN, self).__init__()
         self.target_style_gen = target_style_generator
         self.src_style_gen = source_style_generator
         self.target_style_disc = target_style_discriminator
