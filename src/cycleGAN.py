@@ -128,8 +128,9 @@ class CycleGAN(keras.Model):
                 for index, batch_loss in enumerate(batch_losses_list):
                     epoch_metrics[index](batch_loss)
 
-                epoch_average_losses = zip(metrics_name, [metric.result().numpy().mean() for metric in epoch_metrics])
-                progress_bar.update(batch_index, values = epoch_average_losses, finalize = validation_data is None)
+                epoch_losses = [metric.result().numpy().mean() for metric in epoch_metrics]
+                print(type(epoch_losses))
+                progress_bar.update(batch_index, values = zip(metrics_name, epoch_losses), finalize = validation_data is None)
 
             if validation_data is None:
                 continue
@@ -140,9 +141,9 @@ class CycleGAN(keras.Model):
                     break
                 validation_metric(self.compute_val_loss(batch))
 
-            val_loss = validation_metric.result().numpy().mean()
-            epoch_losses = zip(metrics_name, [metric.result().numpy().mean() for metric in epoch_metrics].append(val_loss))
-            progress_bar.update(nb_batch_per_epoch, values = epoch_losses, finalize = True)
+            epoch_losses = epoch_losses.append(validation_metric.result().numpy().mean()))
+            print(type(epoch_losses))
+            progress_bar.update(nb_batch_per_epoch, values = zip(metrics_name, epoch_losses), finalize = True)
 
             if save_weight_filepath and (best_val_loss is None or val_loss <= best_val_loss):
                 self.save_weights(save_weight_filepath)
